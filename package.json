@@ -2,7 +2,7 @@
   "name": "heph",
   "displayName": "heph",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.82.0"
   },
@@ -37,6 +37,12 @@
           "dark": "./icons/icon-dark.png"
         },
         "configuration": "./syntaxes/language-configuration.json"
+      },
+      {
+        "id": "yaml",
+        "filenames": [".hephconfig"],
+        "filenamePatterns": [".hephconfig.*"],
+        "aliases": ["YAML", "yaml"]
       }
     ],
     "grammars": [
