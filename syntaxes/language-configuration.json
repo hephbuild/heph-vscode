@@ -1,0 +1,27 @@
+{
+    "comments": {
+      "lineComment": "#",
+      "blockComment": ["\"\"\"", "\"\"\""]
+    },
+    "brackets": [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"]
+    ],
+    // TODO: Should these include/exclude strings/comments?
+    "autoClosingPairs": [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"],
+      ["\"", "\""],
+      ["'", "'"]
+    ],
+    "surroundingPairs": [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"],
+      ["\"", "\""],
+      ["'", "'"]
+    ]
+}
+  

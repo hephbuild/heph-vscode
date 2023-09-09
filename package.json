@@ -1,0 +1,71 @@
+{
+  "name": "heph",
+  "displayName": "heph",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.hephconfig"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hephbuild/heph.git"
+  },
+  "publisher": "hephbuild",
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "heph.format",
+        "title": "Format BUILD file"
+      }
+    ],
+    "languages": [
+      {
+        "id": "hephbuild",
+        "filenames": ["BUILD"],
+        "filenamePatterns": ["BUILD.*"],
+        "extensions": [".BUILD"],
+        "aliases": ["heph", "hephbuild"],
+        "icon": {
+          "light": "./icons/icon-light.png",
+          "dark": "./icons/icon-dark.png"
+        },
+        "configuration": "./syntaxes/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hephbuild",
+        "scopeName": "source.hephbuild",
+        "path": "./syntaxes/hephbuild.tmLanguage.json"
+      }
+    ]
+  },
+  "icon": "icons/icon-dark.png",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.82.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "eslint": "^8.47.0",
+    "glob": "^10.3.3",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.6",
+    "@vscode/test-electron": "^2.3.4"
+  }
+}
