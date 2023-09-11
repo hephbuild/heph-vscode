@@ -12,7 +12,7 @@ interface ExecResult {
   stdout: string;
   stdcombined: string;
   exitCode: number;
-  err?: any,
+  err?: any;
 }
 
 function streamWrite(
@@ -47,7 +47,7 @@ export default function exec({
 
     if (stdin) {
       await streamWrite(process.stdin, stdin);
-      process.stdin.end()
+      process.stdin.end();
     }
 
     let stdout = "";
@@ -76,7 +76,7 @@ export default function exec({
 async function heph(opts: ExecOptions): Promise<ExecResult> {
   return await exec({
     ...opts,
-    args: ["heph", ...opts.args]
+    args: ["heph", ...opts.args],
   });
 }
 

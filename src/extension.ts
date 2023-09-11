@@ -22,34 +22,37 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable);
 
-  disposable = vscode.languages.registerDocumentFormattingEditProvider("hephbuild", {
-    async provideDocumentFormattingEdits(
-      document: vscode.TextDocument
-    ): Promise<vscode.TextEdit[] | undefined> {
-      console.log("fmt", document.uri.path);
+  disposable = vscode.languages.registerDocumentFormattingEditProvider(
+    "hephbuild",
+    {
+      async provideDocumentFormattingEdits(
+        document: vscode.TextDocument
+      ): Promise<vscode.TextEdit[] | undefined> {
+        console.log("fmt", document.uri.fsPath);
 
-      let firstLine = document.lineAt(0);
-      let lastLine = document.lineAt(document.lineCount - 1);
-      let textRange = new vscode.Range(
-        firstLine.range.start,
-        lastLine.range.end
-      );
-
-      try {
-        const res = await heph.fmt(
-          path.dirname(document.uri.path),
-          document.getText()
+        let firstLine = document.lineAt(0);
+        let lastLine = document.lineAt(document.lineCount - 1);
+        let textRange = new vscode.Range(
+          firstLine.range.start,
+          lastLine.range.end
         );
-        console.debug("fmt result", res);
 
-        return [vscode.TextEdit.replace(textRange, res)];
-      } catch (err) {
-		console.error("fmt error", err);
+        try {
+          const res = await heph.fmt(
+            path.dirname(document.uri.path),
+            document.getText()
+          );
+          console.debug("fmt result", res);
 
-        await vscode.window.showErrorMessage(`fmt failed: ${err}`);
-      }
-    },
-  });
+          return [vscode.TextEdit.replace(textRange, res)];
+        } catch (err) {
+          console.error("fmt error", err);
+
+          vscode.window.showErrorMessage(`fmt failed: ${err}`);
+        }
+      },
+    }
+  );
 
   context.subscriptions.push(disposable);
 }
