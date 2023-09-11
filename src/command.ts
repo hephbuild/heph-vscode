@@ -1,7 +1,7 @@
-import { spawn } from "child_process";
+import { SpawnOptionsWithoutStdio, spawn } from "child_process";
 import { Writable } from "stream";
 
-interface ExecOptions {
+interface ExecOptions extends SpawnOptionsWithoutStdio {
   args: string[];
   stdin?: string;
   cwd: string;
@@ -37,12 +37,12 @@ function streamWrite(
 export default function exec({
   args,
   stdin,
-  cwd,
+  ...opts
 }: ExecOptions): Promise<ExecResult> {
   return new Promise(async function (resolve, reject) {
     const process = spawn(args[0], args.slice(1), {
       stdio: stdin !== undefined ? ["pipe"] : undefined,
-      cwd,
+      ...opts,
     });
 
     if (stdin) {
