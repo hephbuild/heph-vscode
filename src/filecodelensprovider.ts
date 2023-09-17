@@ -47,7 +47,7 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
           }
         }
 
-        if (path.join(t.Package.Root.Root, a.file) === file) {
+        if (path.join(t.Package.Root.Abs, a.file) === file) {
           return true;
         }
 

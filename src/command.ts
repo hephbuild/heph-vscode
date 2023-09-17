@@ -137,6 +137,8 @@ export interface QueryTarget {
   Package: {
     Root: {
       Root: string;
+      RelRoot: string;
+      Abs: string;
     };
   };
 }
