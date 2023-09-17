@@ -1,10 +1,12 @@
+import * as vscode from "vscode";
 import { SpawnOptionsWithoutStdio, spawn } from "child_process";
 import { Writable } from "stream";
 
 interface ExecOptions extends SpawnOptionsWithoutStdio {
   args: string[];
   stdin?: string;
-  cwd: string;
+  cwd?: string;
+  token?: vscode.CancellationToken;
 }
 
 interface ExecResult {
@@ -37,13 +39,39 @@ function streamWrite(
 export default function exec({
   args,
   stdin,
+  token,
   ...opts
 }: ExecOptions): Promise<ExecResult> {
+  const disposables: vscode.Disposable[] = [];
+
   return new Promise(async function (resolve, reject) {
+    console.log("Running", args);
+
+    opts.cwd = opts.cwd ?? vscode.workspace.rootPath!;
+
     const process = spawn(args[0], args.slice(1), {
       stdio: stdin !== undefined ? ["pipe"] : undefined,
       ...opts,
     });
+
+    if (token) {
+      disposables.push(
+        token.onCancellationRequested(() => {
+          process.kill("SIGINT");
+
+          // Force kill after 5 seconds
+          const t = setTimeout(() => {
+            process.kill("SIGKILL");
+          }, 5 * 1000);
+
+          disposables.push(
+            new vscode.Disposable(() => {
+              clearTimeout(t);
+            })
+          );
+        })
+      );
+    }
 
     if (stdin) {
       await streamWrite(process.stdin, stdin);
@@ -65,18 +93,28 @@ export default function exec({
     });
 
     process.on("close", function (code) {
+      disposables.forEach((d) => {
+        d.dispose();
+      });
+
       resolve({ stdout, stderr, stdcombined, exitCode: code ?? -1 });
     });
     process.on("error", function (err) {
+      disposables.forEach((d) => {
+        d.dispose();
+      });
+
       reject({ stdout, stderr, stdcombined, exitCode: -1, err });
     });
   });
 }
 
+const bin = "heph";
+
 async function heph(opts: ExecOptions): Promise<ExecResult> {
   return await exec({
     ...opts,
-    args: ["heph", ...opts.args],
+    args: [bin, ...opts.args],
   });
 }
 
@@ -88,6 +126,27 @@ export async function fmt(cwd: string, text: string): Promise<string> {
   });
   if (exitCode === 0) {
     return stdout;
+  }
+
+  throw new Error(stderr);
+}
+
+export interface QueryTarget {
+  Addr: string;
+  Annotations: Record<string, any>;
+  Package: {
+    Root: {
+      Root: string;
+    };
+  };
+}
+
+export async function query(query: string): Promise<QueryTarget[]> {
+  const { exitCode, stdout, stderr } = await heph({
+    args: ["query", "--json", query],
+  });
+  if (exitCode === 0) {
+    return JSON.parse(stdout);
   }
 
   throw new Error(stderr);

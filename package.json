@@ -2,12 +2,13 @@
   "name": "heph",
   "displayName": "heph",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.82.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Formatters"
   ],
   "activationEvents": [
     "workspaceContains:.hephconfig"
@@ -21,17 +22,26 @@
   "contributes": {
     "commands": [
       {
-        "command": "heph.format",
-        "title": "Format BUILD file"
+        "command": "heph.refreshState",
+        "title": "heph: Refresh state"
       }
     ],
     "languages": [
       {
         "id": "hephbuild",
-        "filenames": ["BUILD"],
-        "filenamePatterns": ["BUILD.*"],
-        "extensions": [".BUILD"],
-        "aliases": ["heph", "hephbuild"],
+        "filenames": [
+          "BUILD"
+        ],
+        "filenamePatterns": [
+          "BUILD.*"
+        ],
+        "extensions": [
+          ".BUILD"
+        ],
+        "aliases": [
+          "heph",
+          "hephbuild"
+        ],
         "icon": {
           "light": "./icons/icon-light.png",
           "dark": "./icons/icon-dark.png"
@@ -40,9 +50,16 @@
       },
       {
         "id": "yaml",
-        "filenames": [".hephconfig"],
-        "filenamePatterns": [".hephconfig.*"],
-        "aliases": ["YAML", "yaml"]
+        "filenames": [
+          ".hephconfig"
+        ],
+        "filenamePatterns": [
+          ".hephconfig.*"
+        ],
+        "aliases": [
+          "YAML",
+          "yaml"
+        ]
       }
     ],
     "grammars": [
@@ -51,7 +68,35 @@
         "scopeName": "source.hephbuild",
         "path": "./syntaxes/hephbuild.tmLanguage.json"
       }
-    ]
+    ],
+    "taskDefinitions": [
+      {
+        "type": "heph",
+        "required": [
+          "addr"
+        ],
+        "properties": {
+          "addr": {
+            "type": "string",
+            "description": "Target address"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Force running the target"
+          }
+        }
+      }
+    ],
+    "configuration": {
+      "title": "heph",
+      "properties": {
+        "heph.codelens.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable codelens"
+        }
+      }
+    }
   },
   "icon": "icons/icon-dark.png",
   "scripts": {
