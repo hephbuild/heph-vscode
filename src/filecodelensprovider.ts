@@ -76,11 +76,10 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
         targets,
         annotationLaunch,
         range,
-        (target, _annotation) => {
-          // TODO: move that hack to heph
-          const annotation = JSON.parse(
-            JSON.stringify(_annotation).split("$(addr)").join(target.Addr)
-          );
+        (target, annotation) => {
+          if (!annotation.configuration) {
+            return undefined;
+          }
 
           return {
             title: annotation.configuration?.name ?? target.Addr,
@@ -111,7 +110,7 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
     f: (
       target: heph.QueryTarget,
       annotation: any
-    ) => vscode.Command | vscode.Command[]
+    ) => vscode.Command | vscode.Command[] | undefined
   ) {
     return targets.flatMap((target) => {
       return Object.entries(target.Annotations).flatMap(([k, a]) => {
@@ -120,6 +119,10 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
         }
 
         let commands = f(target, a);
+        if (!commands) {
+          return [];
+        }
+
         if (!Array.isArray(commands)) {
           commands = [commands];
         }
