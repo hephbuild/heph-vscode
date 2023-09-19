@@ -83,6 +83,7 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
 
           return {
             title: annotation.configuration?.name ?? target.Addr,
+            tooltip: `Launch config:\n\n${JSON.stringify(annotation.configuration, null, "    ")}`,
             command: "heph.launchTarget",
             arguments: [annotation.configuration],
           };
