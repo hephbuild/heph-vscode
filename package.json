@@ -2,7 +2,7 @@
   "name": "heph",
   "displayName": "heph",
   "description": "",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.82.0"
   },
@@ -94,6 +94,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable codelens"
+        },
+        "heph.bin": {
+          "type": "string",
+          "default": "",
+          "description": "heph binary path, will default to the system-installed heph"
         }
       }
     }

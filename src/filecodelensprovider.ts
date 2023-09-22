@@ -1,18 +1,28 @@
 import * as vscode from "vscode";
 import * as heph from "./command";
 import path = require("path");
+import { logger } from "./logger";
 
 const annotationTask = "vscode-task";
 const annotationLaunch = "vscode-launch";
 
 export class FileCodelensProvider implements vscode.CodeLensProvider {
-  constructor(onInvalidate: vscode.Event<void>) {
-    onInvalidate(() => {
-      this.queryPromise = undefined;
-    });
-  }
+  private onDidChange: vscode.EventEmitter<void>;
+  onDidChangeCodeLenses: vscode.Event<void>;
 
   private queryPromise: Promise<heph.QueryTarget[]> | undefined;
+  private didShowPromiseError = false;
+
+  constructor(onInvalidate: vscode.Event<void>) {
+    this.onDidChange = new vscode.EventEmitter();
+    this.onDidChangeCodeLenses = this.onDidChange.event;
+
+    onInvalidate(() => {
+      this.queryPromise = undefined;
+      this.didShowPromiseError = false;
+      this.onDidChange.fire();
+    });
+  }
 
   private async getAnnotationsTargettingFile(file: string) {
     if (!this.queryPromise) {
@@ -24,11 +34,16 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
     let targets: heph.QueryTarget[];
     try {
       targets = await this.queryPromise;
+      this.didShowPromiseError = false;
     } catch (err) {
-      console.error("annotations error", err);
+      if (!this.didShowPromiseError) {
+        logger.error("annotations error", err);
 
-      vscode.window.showErrorMessage(`get annotations failed: ${err}`);
-      return []
+        vscode.window.showErrorMessage(`get annotations failed: ${err}`);
+        this.didShowPromiseError = true;
+      }
+
+      return [];
     }
 
     return targets.filter((t) => {
@@ -60,10 +75,10 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
-    const config = vscode.workspace.getConfiguration('heph')
+    const config = vscode.workspace.getConfiguration("heph");
 
-    if (!config.get('codelens.enabled')) {
-      return []
+    if (!config.get("codelens.enabled")) {
+      return [];
     }
 
     const targets = await this.getAnnotationsTargettingFile(document.fileName);
@@ -83,7 +98,11 @@ export class FileCodelensProvider implements vscode.CodeLensProvider {
 
           return {
             title: annotation.configuration?.name ?? target.Addr,
-            tooltip: `Launch config:\n\n${JSON.stringify(annotation.configuration, null, "    ")}`,
+            tooltip: `Launch config:\n\n${JSON.stringify(
+              annotation.configuration,
+              null,
+              "    "
+            )}`,
             command: "heph.launchTarget",
             arguments: [annotation.configuration],
           };

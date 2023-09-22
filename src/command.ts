@@ -1,20 +1,13 @@
 import * as vscode from "vscode";
 import { SpawnOptionsWithoutStdio, spawn } from "child_process";
 import { Writable } from "stream";
+import { logger } from "./logger";
 
 interface ExecOptions extends SpawnOptionsWithoutStdio {
   args: string[];
   stdin?: string;
   cwd?: string;
   token?: vscode.CancellationToken;
-}
-
-interface ExecResult {
-  stderr: string;
-  stdout: string;
-  stdcombined: string;
-  exitCode: number;
-  err?: any;
 }
 
 function streamWrite(
@@ -36,6 +29,36 @@ function streamWrite(
   });
 }
 
+interface ExecResultI {
+  stderr: string;
+  stdout: string;
+  stdcombined: string;
+  exitCode: number;
+  err?: any;
+}
+
+class ExecResult implements ExecResultI {
+  constructor(
+    public stdout: string,
+    public stderr: string,
+    public stdcombined: string,
+    public exitCode: number,
+    public err?: any,
+  ){}
+}
+
+class ExecResultError extends Error implements ExecResultI {
+  constructor(
+    public stderr: string,
+    public stdout: string,
+    public stdcombined: string,
+    public exitCode: number,
+    public err?: any,
+  ){
+    super(err)
+  }
+}
+
 export default function exec({
   args,
   stdin,
@@ -45,7 +68,7 @@ export default function exec({
   const disposables: vscode.Disposable[] = [];
 
   return new Promise(async function (resolve, reject) {
-    console.log("Running", args);
+    logger.info("Running", args);
 
     opts.cwd = opts.cwd ?? vscode.workspace.rootPath!;
 
@@ -97,21 +120,23 @@ export default function exec({
         d.dispose();
       });
 
-      resolve({ stdout, stderr, stdcombined, exitCode: code ?? -1 });
+      resolve(new ExecResult(stdout, stderr, stdcombined, code ?? -1))
     });
     process.on("error", function (err) {
       disposables.forEach((d) => {
         d.dispose();
       });
 
-      reject({ stdout, stderr, stdcombined, exitCode: -1, err });
+      reject(new ExecResultError(stdout, stderr, stdcombined, -1, err))
     });
   });
 }
 
-const bin = "heph";
-
 async function heph(opts: ExecOptions): Promise<ExecResult> {
+  const config = vscode.workspace.getConfiguration('heph')
+
+  const bin = config.get<string>('bin') || "heph";
+
   return await exec({
     ...opts,
     args: [bin, ...opts.args],
@@ -119,7 +144,7 @@ async function heph(opts: ExecOptions): Promise<ExecResult> {
 }
 
 export async function fmt(cwd: string, text: string): Promise<string> {
-  const { exitCode, stdout, stderr } = await heph({
+  const { exitCode, stdout, stdcombined } = await heph({
     args: ["fmt", "-"],
     stdin: text,
     cwd: cwd,
@@ -128,7 +153,7 @@ export async function fmt(cwd: string, text: string): Promise<string> {
     return stdout;
   }
 
-  throw new Error(stderr);
+  throw new Error(stdcombined);
 }
 
 export interface QueryTarget {
@@ -144,12 +169,12 @@ export interface QueryTarget {
 }
 
 export async function query(query: string): Promise<QueryTarget[]> {
-  const { exitCode, stdout, stderr } = await heph({
+  const { exitCode, stdout, stdcombined } = await heph({
     args: ["query", "--json", query],
   });
   if (exitCode === 0) {
     return JSON.parse(stdout);
   }
 
-  throw new Error(stderr);
+  throw new Error(stdcombined);
 }

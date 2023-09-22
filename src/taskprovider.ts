@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as heph from "./command";
-import { EventEmitter } from "stream";
+import { logger } from "./logger";
 
 // Must be kept in sync with package.json
 interface TargetTaskDefinition extends vscode.TaskDefinition {
@@ -15,8 +15,8 @@ export class TasksProvider implements vscode.TaskProvider {
 
   constructor(onInvalidate: vscode.Event<void>) {
     onInvalidate(() => {
-        this.tasksPromise = undefined
-    })
+      this.tasksPromise = undefined;
+    });
   }
 
   async provideTasks() {
@@ -27,7 +27,7 @@ export class TasksProvider implements vscode.TaskProvider {
     try {
       return await this.tasksPromise;
     } catch (err) {
-      console.error("tasks error", err);
+      logger.error("tasks error", err);
 
       vscode.window.showErrorMessage(`get tasks failed: ${err}`);
     }
