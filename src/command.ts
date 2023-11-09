@@ -166,6 +166,15 @@ export interface QueryTarget {
       Abs: string;
     };
   };
+  Sources: {
+    CallFrames: {
+      Name: string;
+      Pos: {
+        File: string;
+        Line: number;
+      }
+    }[]
+  }[]
 }
 
 export async function query(query: string): Promise<QueryTarget[]> {
