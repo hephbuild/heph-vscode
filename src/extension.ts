@@ -130,13 +130,13 @@ function patternFSWatcher(pattern: string, f: () => void) {
   const watcher = vscode.workspace.createFileSystemWatcher(pattern)
 
   watcher.onDidChange(uri => {
-    f()
+    setImmediate(f)
   })
   watcher.onDidCreate(uri => {
-    f()
+    setImmediate(f)
   })
   watcher.onDidDelete(uri => {
-    f()
+    setImmediate(f)
   })
 
   return watcher;
