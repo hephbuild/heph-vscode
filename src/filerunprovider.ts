@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as heph from "./command";
 import path = require("path");
 import { logger } from "./logger";
+import InFlight from "./inflight";
 
 export default class FileRunProvider {
     static annotationTask = "vscode-task";
@@ -13,7 +14,10 @@ export default class FileRunProvider {
     private didChange = new vscode.EventEmitter<void>();
     onDidChange: vscode.Event<void>;
 
-    constructor(onInvalidate: vscode.Event<void>) {
+    private inFlight: InFlight;
+
+    constructor(onInvalidate: vscode.Event<void>, inFlight: InFlight) {
+        this.inFlight = inFlight;
         this.onDidChange = this.didChange.event;
 
         onInvalidate(() => {
@@ -25,9 +29,9 @@ export default class FileRunProvider {
 
     private async runQuery() {
         if (!this.queryPromise) {
-            this.queryPromise = heph.query(
+            this.queryPromise = this.inFlight.watch(() => heph.query(
                 `has_annotation("${FileRunProvider.annotationTask}") || has_annotation("${FileRunProvider.annotationLaunch}")`
-            );
+            ));
             this.queryPromise.then(() => {
                 this.didChange.fire();
             })

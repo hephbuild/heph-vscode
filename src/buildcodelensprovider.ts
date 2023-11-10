@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as heph from "./command";
 import { logger } from "./logger";
 import { Commands, Settings } from "./consts";
+import InFlight from "./inflight";
 
 export class BuildCodelensProvider implements vscode.CodeLensProvider {
   private onDidChange: vscode.EventEmitter<void>;
@@ -9,8 +10,10 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
 
   private queryPromise: Promise<heph.QueryTarget[]> | undefined;
   private didShowPromiseError = false;
+  private inFlight: InFlight;
 
-  constructor(onInvalidate: vscode.Event<void>) {
+  constructor(onInvalidate: vscode.Event<void>, inFlight: InFlight) {
+    this.inFlight = inFlight;
     this.onDidChange = new vscode.EventEmitter();
     this.onDidChangeCodeLenses = this.onDidChange.event;
 
@@ -35,7 +38,7 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
 
   private async getTargetsPresentOnFile(file: string) {
     if (!this.queryPromise) {
-      this.queryPromise = heph.query(`:`);
+      this.queryPromise = this.inFlight.watch(() => heph.query(`:`))
     }
 
     let targets: heph.QueryTarget[];

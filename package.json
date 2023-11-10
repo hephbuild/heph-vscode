@@ -95,7 +95,7 @@
     "configuration": {
       "title": "heph",
       "properties": {
-        "buildfiles.watcher.enabled": {
+        "heph.buildfiles.watcher.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable file watcher"
@@ -131,6 +131,15 @@
           "group": "navigation"
         }
       ]
+    },
+    "icons": {
+      "heph-logo": {
+        "description": "heph logo",
+        "default": {
+          "fontPath": "./icons/fontello/font/fontello.woff",
+          "fontCharacter": "\\E802"
+        }
+      }
     }
   },
   "icon": "icons/icon-dark.png",

@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { TasksProvider } from "./taskprovider";
 import { HephBuildDocumentFormatting } from "./documentformatting";
@@ -8,6 +6,8 @@ import { BuildCodelensProvider } from "./buildcodelensprovider";
 import FileRunProvider from "./filerunprovider";
 import EditorExt from "./editorext";
 import { Commands, Settings } from "./consts";
+import InFlight from "./inflight";
+import StatusBar from "./statusbar";
 
 export function activate(context: vscode.ExtensionContext) {
   if (context.extensionMode == vscode.ExtensionMode.Development) {
@@ -16,6 +16,8 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   logger.info('heph-vscode is now active!');
+
+  const inFlight = new InFlight()
 
   const invalidateEmitter = new vscode.EventEmitter<void>();
   context.subscriptions.push(invalidateEmitter);
@@ -26,9 +28,13 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  const fileRunProvider = new FileRunProvider(invalidateEmitter.event)
+  const fileRunProvider = new FileRunProvider(invalidateEmitter.event, inFlight)
 
   const editorExt = new EditorExt(fileRunProvider)
+
+  const statusBarItem = new StatusBar(inFlight);
+
+  context.subscriptions.push(statusBarItem);
 
   const taskProvider = new TasksProvider(fileRunProvider.onDidChange);
 
@@ -103,7 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
       "hephbuild",
-      new BuildCodelensProvider(fileRunProvider.onDidChange)
+      new BuildCodelensProvider(fileRunProvider.onDidChange, inFlight)
     )
   );
 
