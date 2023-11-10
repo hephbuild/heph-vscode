@@ -23,7 +23,12 @@
     "commands": [
       {
         "command": "heph.refreshState",
-        "title": "heph: Refresh state"
+        "title": "heph: refresh state"
+      },
+      {
+        "command": "heph.editorRunConfigs",
+        "title": "heph: run from current file",
+        "icon": "$(run)"
       }
     ],
     "languages": [
@@ -90,10 +95,20 @@
     "configuration": {
       "title": "heph",
       "properties": {
-        "heph.codelens.enabled": {
+        "buildfiles.watcher.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable codelens"
+          "description": "Enable file watcher"
+        },
+        "heph.buildfiles.copyAddr.codelens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable copy target addr codelens in BUILD files"
+        },
+        "heph.fileRun.codelens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable codelens in files targetted by vscode-launch or vscode-task annotations"
         },
         "heph.bin": {
           "type": "string",
@@ -101,6 +116,21 @@
           "description": "heph binary path, will default to the system-installed heph"
         }
       }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "heph.editorRunConfigs",
+          "when": "heph.hasRunConfigs"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "heph.hasRunConfigs",
+          "command": "heph.editorRunConfigs",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "icon": "icons/icon-dark.png",

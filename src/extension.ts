@@ -3,9 +3,11 @@
 import * as vscode from "vscode";
 import { TasksProvider } from "./taskprovider";
 import { HephBuildDocumentFormatting } from "./documentformatting";
-import { FileCodelensProvider } from "./filecodelensprovider";
 import { logger } from "./logger";
 import { BuildCodelensProvider } from "./buildcodelensprovider";
+import FileRunProvider from "./filerunprovider";
+import EditorExt from "./editorext";
+import { Commands, Settings } from "./consts";
 
 export function activate(context: vscode.ExtensionContext) {
   if (context.extensionMode == vscode.ExtensionMode.Development) {
@@ -17,23 +19,52 @@ export function activate(context: vscode.ExtensionContext) {
 
   const invalidateEmitter = new vscode.EventEmitter<void>();
   context.subscriptions.push(invalidateEmitter);
-
-  const taskProvider = new TasksProvider(invalidateEmitter.event);
-
+  
   context.subscriptions.push(
-    vscode.commands.registerCommand("heph.refreshState", async () => {
+    vscode.commands.registerCommand(Commands.refreshState, async () => {
       invalidateEmitter.fire();
     })
   );
 
+  const fileRunProvider = new FileRunProvider(invalidateEmitter.event)
+
+  const editorExt = new EditorExt(fileRunProvider)
+
+  const taskProvider = new TasksProvider(fileRunProvider.onDidChange);
+
   context.subscriptions.push(
-    vscode.commands.registerCommand("heph.runTarget", async (addr: string) => {
+    vscode.commands.registerCommand(Commands.runTarget, async (addr: string) => {
       vscode.tasks.executeTask(taskProvider.getTask(addr));
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("heph.copyAddr", async (addrs: string[]) => {
+    vscode.commands.registerCommand(Commands.editorRunConfigs, async () => {
+      const configs = editorExt.editorConfigs;
+
+      if (configs.length === 0) {
+        return
+      } 
+
+      if (configs.length === 1) {
+        const cfg = configs[0];
+
+        await vscode.commands.executeCommand(cfg.command, ...cfg.arguments)
+      } else {
+        const res = await vscode.window.showQuickPick(configs.map(cfg => (<vscode.QuickPickItem & {config: typeof cfg}>{
+          label: cfg.title,
+          config: cfg,
+        })));
+        if (!res) {
+          return
+        }
+        await vscode.commands.executeCommand(res.config.command, ...res.config.arguments)
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(Commands.copyAddr, async (addrs: string[]) => {
       if (addrs.length > 1) {
         const addr = await vscode.window.showQuickPick(addrs.map(a => `copy ${a}`));
         if (!addr) {
@@ -48,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "heph.launchTarget",
+      Commands.launchTarget,
       async (config: vscode.DebugConfiguration) => {
         vscode.debug.startDebugging(
           (vscode.workspace.workspaceFolders ?? [])[0],
@@ -71,30 +102,25 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
-      "*",
-      new FileCodelensProvider(invalidateEmitter.event)
+      "hephbuild",
+      new BuildCodelensProvider(fileRunProvider.onDidChange)
     )
   );
 
-  context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider(
-      "hephbuild",
-      new BuildCodelensProvider(invalidateEmitter.event)
-    )
-  );
+  function buildFileOnDidChange() {
+    if (!Settings.fileWatcher.get()) {
+      return;
+    }
+
+    invalidateEmitter.fire()
+  }
   
-  context.subscriptions.push(invalidateWatcher("**/BUILD.*", () => {
-    invalidateEmitter.fire()
-  }));
-  context.subscriptions.push(invalidateWatcher("**/*.BUILD", () => {
-    invalidateEmitter.fire()
-  }));
-  context.subscriptions.push(invalidateWatcher("**/BUILD", () => {
-    invalidateEmitter.fire()
-  }));
+  context.subscriptions.push(patternFSWatcher("**/BUILD.*", buildFileOnDidChange));
+  context.subscriptions.push(patternFSWatcher("**/*.BUILD", buildFileOnDidChange));
+  context.subscriptions.push(patternFSWatcher("**/BUILD", buildFileOnDidChange));
 }
 
-function invalidateWatcher(pattern: string, f: () => void) {
+function patternFSWatcher(pattern: string, f: () => void) {
   const watcher = vscode.workspace.createFileSystemWatcher(pattern)
 
   watcher.onDidChange(uri => {
@@ -106,7 +132,6 @@ function invalidateWatcher(pattern: string, f: () => void) {
   watcher.onDidDelete(uri => {
     f()
   })
-
 
   return watcher;
 }

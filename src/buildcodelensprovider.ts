@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as heph from "./command";
 import { logger } from "./logger";
+import { Commands, Settings } from "./consts";
 
 export class BuildCodelensProvider implements vscode.CodeLensProvider {
   private onDidChange: vscode.EventEmitter<void>;
@@ -61,9 +62,7 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
-    const config = vscode.workspace.getConfiguration("heph");
-
-    if (!config.get("codelens.enabled")) {
+    if (!Settings.copyAddrCodelens.get()) {
       return [];
     }
 
@@ -85,7 +84,7 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
 
       return new vscode.CodeLens(range, {
         title: addrs.length === 1 ? `copy addr` : `copy addr (${addrs.length})`,
-        command: "heph.copyAddr",
+        command: Commands.copyAddr,
         arguments: [addrs],
       })
     })
