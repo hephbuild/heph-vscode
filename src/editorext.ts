@@ -12,23 +12,21 @@ interface EditorAction {
 export default class EditorExt {
     private fileRunProvider: FileRunProvider;
     editorConfigs: EditorAction[] = []
+    
+    private activeTextEditorUri: vscode.Uri | undefined;
 
     constructor(fileRunProvider: FileRunProvider) {
         this.fileRunProvider = fileRunProvider
 
         this.fileRunProvider.onDidChange(() => {
-            const editor = vscode.window.activeTextEditor;
-            if (!editor) {
-                return
-            }
-            void this._ensureState(editor.document.uri);
+            void this._ensureState();
         })
 
+        this.activeTextEditorUri = vscode.window.activeTextEditor?.document.uri;
+
         vscode.window.onDidChangeActiveTextEditor((textEditor) => {
-            if (!textEditor) {
-                return;
-            }
-            void this._ensureState(textEditor.document.uri);
+            this.activeTextEditorUri = textEditor?.document.uri;
+            void this._ensureState();
         });
     }
 
@@ -37,8 +35,14 @@ export default class EditorExt {
         vscode.commands.executeCommand('setContext', 'heph.hasRunConfigs', configs.length > 0);
     }
 
-    private async _ensureState(uri: vscode.Uri) {
+    private async _ensureState() {
         if (!Settings.fileRunCodelens.get()) {
+            this.setConfigs([])
+            return;
+        }
+
+        const uri = this.activeTextEditorUri;
+        if (!uri) {
             this.setConfigs([])
             return;
         }

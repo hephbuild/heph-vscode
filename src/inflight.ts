@@ -1,9 +1,5 @@
 import * as vscode from "vscode";
 
-export function isPromise<R>(val: R | Promise<R>): val is Promise<R> {
-    return val && (<Promise<R>>val).then !== undefined;
-}
-
 export default class InFlight {
     private count = 0;
    
@@ -14,22 +10,13 @@ export default class InFlight {
         this.onDidChange = this.didChange.event;
     }
 
-    watch<R>(f: () => R): R {
+    watch<R>(p: Promise<R>): Promise<R> {
         this.count++;
         this.didChange.fire(true);
 
-        const r = f();
-
-        if (isPromise(r)) {
-            r.finally(() => {
-                this.handleDone()
-            })
-            return r
-        } else {
+        return p.finally(() => {
             this.handleDone()
-        }
-        
-        return r
+        })
     }
 
     private handleDone() {

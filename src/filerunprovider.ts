@@ -29,7 +29,7 @@ export default class FileRunProvider {
 
     private async runQuery() {
         if (!this.queryPromise) {
-            this.queryPromise = this.inFlight.watch(() => heph.query(
+            this.queryPromise = this.inFlight.watch(heph.query(
                 `has_annotation("${FileRunProvider.annotationTask}") || has_annotation("${FileRunProvider.annotationLaunch}")`
             ));
             this.queryPromise.then(() => {
