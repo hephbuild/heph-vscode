@@ -120,6 +120,8 @@ export default function exec({
         d.dispose();
       });
 
+      logger.info("Done");
+
       resolve(new ExecResult(stdout, stderr, stdcombined, code ?? -1))
     });
     process.on("error", function (err) {
@@ -177,9 +179,9 @@ export interface QueryTarget {
   }[]
 }
 
-export async function query(query: string): Promise<QueryTarget[]> {
+export async function query(query: string, ...args: string[]): Promise<QueryTarget[]> {
   const { exitCode, stdout, stdcombined } = await heph({
-    args: ["query", "--json", query],
+    args: ["query", "--json", query, ...args],
   });
   if (exitCode === 0) {
     return JSON.parse(stdout);

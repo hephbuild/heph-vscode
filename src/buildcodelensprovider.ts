@@ -38,7 +38,7 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
 
   private async getTargetsPresentOnFile(file: string) {
     if (!this.queryPromise) {
-      this.queryPromise = this.inFlight.watch(heph.query(`:`))
+      this.queryPromise = this.inFlight.watch(heph.query(":", "--no-gen"))
     }
 
     let targets: heph.QueryTarget[];
