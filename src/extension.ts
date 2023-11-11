@@ -60,7 +60,9 @@ export function activate(context: vscode.ExtensionContext) {
         const res = await vscode.window.showQuickPick(configs.map(cfg => (<vscode.QuickPickItem & {config: typeof cfg}>{
           label: cfg.title,
           config: cfg,
-        })));
+        })), {
+          title: "Run",
+        });
         if (!res) {
           return
         }
@@ -72,7 +74,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(Commands.copyAddr, async (addrs: string[]) => {
       if (addrs.length > 1) {
-        const addr = await vscode.window.showQuickPick(addrs.map(a => `copy ${a}`));
+        const addr = await vscode.window.showQuickPick(addrs, {
+          title: "Copy",
+        });
         if (!addr) {
           return
         }
