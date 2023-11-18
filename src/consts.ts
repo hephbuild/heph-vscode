@@ -15,6 +15,8 @@ class SettingItem<T> {
 export class Settings {
     static fileWatcher = new SettingItem<boolean>("buildfiles.watcher.enabled")
     static copyAddrCodelens = new SettingItem<boolean>("buildfiles.copyAddr.codelens")
+    static copyAddrGen = new SettingItem<boolean>("buildfiles.copyAddr.gen")
+    static copyAddrShowAll = new SettingItem<boolean>("buildfiles.copyAddr.showAll")
     static fileRunCodelens = new SettingItem<boolean>("fileRun.codelens")
     static bin = new SettingItem<string>("bin")
 }

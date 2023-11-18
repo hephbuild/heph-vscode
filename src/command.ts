@@ -160,6 +160,7 @@ export async function fmt(cwd: string, text: string): Promise<string> {
 
 export interface QueryTarget {
   Addr: string;
+  Private: boolean;
   Annotations: Record<string, any>;
   Package: {
     Root: {
@@ -177,14 +178,28 @@ export interface QueryTarget {
       }
     }[]
   }[]
+  GenSources?: string[]
 }
+
+const queryJsonFilter = "{Addr,Private,Annotations,Package,Sources,GenSources}"
 
 export async function query(query: string, ...args: string[]): Promise<QueryTarget[]> {
   const { exitCode, stdout, stdcombined } = await heph({
-    args: ["query", "--json", query, ...args],
+    args: ["query", `--json=${queryJsonFilter}`, query, ...args],
   });
   if (exitCode === 0) {
     return JSON.parse(stdout);
+  }
+
+  throw new Error(stdcombined);
+}
+
+export async function queryRoot(): Promise<string> {
+  const { exitCode, stdout, stdcombined } = await heph({
+    args: ["query", "root"],
+  });
+  if (exitCode === 0) {
+    return stdout.trim();
   }
 
   throw new Error(stdcombined);

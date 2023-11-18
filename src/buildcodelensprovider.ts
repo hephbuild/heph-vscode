@@ -3,22 +3,50 @@ import * as heph from "./command";
 import { logger } from "./logger";
 import { Commands, Settings } from "./consts";
 import InFlight from "./inflight";
+import { LRUCache } from 'lru-cache'
+import path = require("path");
+
+interface TargetLocation {
+  target: heph.QueryTarget
+  pos: heph.QueryTarget["Sources"][0]["CallFrames"][0]["Pos"]
+}
 
 export class BuildCodelensProvider implements vscode.CodeLensProvider {
   private onDidChange: vscode.EventEmitter<void>;
   onDidChangeCodeLenses: vscode.Event<void>;
 
-  private queryPromise: Promise<heph.QueryTarget[]> | undefined;
   private didShowPromiseError = false;
   private inFlight: InFlight;
+
+  private _root: Promise<string> | undefined;
+  private get root(): Promise<string> {
+    return this._root ?? (this._root = this.inFlight.watch(heph.queryRoot()))
+  }
+
+  private queryCache = new LRUCache<string, heph.QueryTarget[]>({
+    max: 20,
+    fetchMethod: async (pkg: string) => {
+      let args = ["-a"]
+      if (!Settings.copyAddrGen.get()) {
+        args.push("--no-gen")
+      }
+
+      return this.inFlight.watch(heph.query(`//${pkg}:* || gen_source(//${pkg}:*)`, ...args))
+    },
+  })
 
   constructor(onInvalidate: vscode.Event<void>, inFlight: InFlight) {
     this.inFlight = inFlight;
     this.onDidChange = new vscode.EventEmitter();
     this.onDidChangeCodeLenses = this.onDidChange.event;
 
+    vscode.workspace.onDidChangeConfiguration(event => {
+      this.onDidChange.fire();
+    })
+
     onInvalidate(() => {
-      this.queryPromise = undefined;
+      this._root = undefined;
+      this.queryCache.clear();
       this.didShowPromiseError = false;
       this.onDidChange.fire();
     });
@@ -26,9 +54,11 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
 
   private getPos(target: heph.QueryTarget, file: string) {
     for (const s of target.Sources) {
+      const direct = s.CallFrames.length <= 2;
+
       for (const cf of s.CallFrames) {
         if (cf.Pos.File === file) {
-          return cf.Pos
+          return {pos: cf.Pos, direct}
         }
       }
     }
@@ -36,28 +66,82 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
     return undefined
   }
 
-  private async getTargetsPresentOnFile(file: string) {
-    if (!this.queryPromise) {
-      this.queryPromise = this.inFlight.watch(heph.query(":", "--no-gen"))
+  private async pkgFromFile(file: string) {
+    const root = await this.root;
+
+    let pkg = path.dirname(file)
+    if (pkg.endsWith('/')) {
+      pkg = pkg.substring(0, -1)
+    }
+    pkg = pkg.replace(root, "")
+    if (pkg.startsWith('/')) {
+      pkg = pkg.substring(1)
     }
 
-    let targets: heph.QueryTarget[];
-    try {
-      targets = await this.queryPromise;
-      this.didShowPromiseError = false;
-    } catch (err) {
-      if (!this.didShowPromiseError) {
-        logger.error("get all error", err);
+    return pkg;
+  }
 
-        vscode.window.showErrorMessage(`get all failed: ${err}`);
-        this.didShowPromiseError = true;
+  private async getTargetsPresentOnFile(file: string) {
+    const pkg = await this.pkgFromFile(file);
+
+    let targets: heph.QueryTarget[] | undefined = undefined;
+    while (targets === undefined) {
+      try {
+        targets = (await this.queryCache.fetch(pkg))!;
+        this.didShowPromiseError = false;
+      } catch (err) {
+        console.log("ERR", `${err}`)
+        if (`${err}` === "Error: deleted") {
+          continue
+        }
+
+        if (!this.didShowPromiseError) {
+          logger.error("get all error", err);
+
+          vscode.window.showErrorMessage(`get all failed: ${err}`);
+          this.didShowPromiseError = true;
+        }
+
+        return [];
+      }
+    }
+
+    return targets.flatMap((t): TargetLocation[] => {
+      const locations: TargetLocation[] = []
+
+      const pos = this.getPos(t, file);
+      if (pos) {
+        if (!pos.direct && t.Private && !Settings.copyAddrShowAll.get()) {
+          return locations;
+        }
+
+        locations.push({
+          target: t,
+          pos: pos.pos,
+        })
       }
 
-      return [];
-    }
+      if (t.GenSources) {
+        for (const s of t.GenSources) {
+          const st = targets!.find(t => t.Addr === s)
 
-    return targets.filter((t) => {
-      return this.getPos(t, file)
+          if (st) {
+            const pos1 = this.getPos(st, file);
+            if (pos1) {
+              if (!pos1.direct && t.Private && !Settings.copyAddrShowAll.get()) {
+                return locations;
+              }
+
+              locations.push({
+                target: t,
+                pos: pos1.pos,
+              })
+            }
+          }
+        }
+      }
+
+      return locations
     });
   }
 
@@ -70,10 +154,9 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
     }
 
     const targets = await this.getTargetsPresentOnFile(document.fileName);
-    
+
     const perLine: Record<number, string[]> = {}
-    for (const target of targets) {
-      const pos = this.getPos(target, document.fileName)!;
+    for (const { target, pos } of targets) {
       const line = pos.Line > 0 ? pos.Line - 1 : 0;
       if (!perLine[line]) {
         perLine[line] = []
