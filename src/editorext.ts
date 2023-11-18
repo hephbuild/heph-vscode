@@ -18,11 +18,12 @@ export default class EditorExt {
     constructor(fileRunProvider: FileRunProvider) {
         this.fileRunProvider = fileRunProvider
 
+        this.activeTextEditorUri = vscode.window.activeTextEditor?.document.uri;
+        void this._ensureState();
+
         this.fileRunProvider.onDidChange(() => {
             void this._ensureState();
         })
-
-        this.activeTextEditorUri = vscode.window.activeTextEditor?.document.uri;
 
         vscode.window.onDidChangeActiveTextEditor((textEditor) => {
             this.activeTextEditorUri = textEditor?.document.uri;
