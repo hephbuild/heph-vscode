@@ -18,6 +18,7 @@ export class Settings {
     static copyAddrGen = new SettingItem<boolean>("buildfiles.copyAddr.gen")
     static copyAddrShowAll = new SettingItem<boolean>("buildfiles.copyAddr.showAll")
     static fileRunCodelens = new SettingItem<boolean>("fileRun.codelens")
+    static fileRunGen = new SettingItem<boolean>("fileRun.gen")
     static bin = new SettingItem<string>("bin")
 }
 

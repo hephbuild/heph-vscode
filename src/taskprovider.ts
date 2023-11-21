@@ -61,7 +61,7 @@ export class TasksProvider implements vscode.TaskProvider {
       vscode.TaskScope.Workspace,
       definition.addr,
       TasksProvider.HephType,
-      new vscode.ProcessExecution("heph", args)
+      new vscode.ProcessExecution(heph.bin(), args)
     );
     task.presentationOptions = {
       reveal: vscode.TaskRevealKind.Always,

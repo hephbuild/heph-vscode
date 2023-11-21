@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { SpawnOptionsWithoutStdio, spawn } from "child_process";
 import { Writable } from "stream";
 import { logger } from "./logger";
+import { Settings } from "./consts";
 
 interface ExecOptions extends SpawnOptionsWithoutStdio {
   args: string[];
@@ -134,14 +135,14 @@ export default function exec({
   });
 }
 
+export function bin() {
+  return Settings.bin.get() || "heph";
+}
+
 async function heph(opts: ExecOptions): Promise<ExecResult> {
-  const config = vscode.workspace.getConfiguration('heph')
-
-  const bin = config.get<string>('bin') || "heph";
-
   return await exec({
     ...opts,
-    args: [bin, ...opts.args],
+    args: [bin(), ...opts.args],
   });
 }
 

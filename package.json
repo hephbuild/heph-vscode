@@ -97,7 +97,7 @@
       "properties": {
         "heph.buildfiles.watcher.enabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Enable file watcher"
         },
         "heph.buildfiles.copyAddr.codelens": {
@@ -107,7 +107,7 @@
         },
         "heph.buildfiles.copyAddr.gen": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Run gen"
         },
         "heph.buildfiles.copyAddr.showAll": {
@@ -119,6 +119,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable codelens in files targetted by vscode-launch or vscode-task annotations"
+        },
+        "heph.fileRun.gen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run gen"
         },
         "heph.bin": {
           "type": "string",
