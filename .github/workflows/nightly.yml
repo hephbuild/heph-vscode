@@ -34,6 +34,10 @@ jobs:
       - name: Install devenv.sh
         run: nix profile add nixpkgs#devenv
 
+      - name: Install deps
+        shell: devenv shell bash -- -e {0}
+        run: npm ci
+
       - name: Compute version
         id: ver
         shell: devenv shell bash -- -e {0}

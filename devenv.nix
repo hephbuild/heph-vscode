@@ -22,11 +22,4 @@
     node --version
     npm --version
   '';
-
-  # Install node deps when not present.
-  tasks."npm:install" = {
-    exec = "npm install";
-    before = [ "devenv:enterShell" ];
-    status = "test -d node_modules";
-  };
 }
