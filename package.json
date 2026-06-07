@@ -19,7 +19,7 @@
     "url": "https://github.com/hephbuild/heph.git"
   },
   "publisher": "hephbuild",
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
@@ -181,10 +181,12 @@
   },
   "icon": "icons/icon-dark.png",
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run bundle",
+    "bundle": "vite build",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "watch": "vite build --watch --mode development",
+    "check-types": "tsc -p ./ --noEmit",
+    "pretest": "npm run compile && npm run bundle && npm run lint",
     "lint": "eslint src",
     "test": "node ./out/test/runTest.js"
   },
@@ -198,7 +200,8 @@
     "glob": "^11.0.3",
     "mocha": "^11.7.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.46.4",
+    "vite": "^8.0.16"
   },
   "dependencies": {
     "lru-cache": "^11.2.2"

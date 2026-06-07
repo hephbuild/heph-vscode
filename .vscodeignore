@@ -1,10 +1,16 @@
-.vscode/**
-.vscode-test/**
-src/**
-.gitignore
-.yarnrc
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
+# Everything is excluded except the bundled output and the assets package.json
+# references (icons, syntaxes). Source is bundled into dist/ by vite, so src/,
+# node_modules/ and tooling are not shipped.
+**
+
+!dist/extension.js
+!icons/**
+!syntaxes/**
+!LICENSE.md
+!README.md
+!CHANGELOG.md
+!package.json
+
+# Re-exclude maps even if they land in dist/
 **/*.map
-**/*.ts
+**/.DS_Store
