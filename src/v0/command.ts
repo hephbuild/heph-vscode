@@ -68,7 +68,7 @@ export default function exec({
 }: ExecOptions): Promise<ExecResult> {
   const disposables: vscode.Disposable[] = [];
 
-  return new Promise(async function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     logger.info("Running", args);
 
     opts.cwd = opts.cwd ?? vscode.workspace.rootPath!;
@@ -98,8 +98,9 @@ export default function exec({
     }
 
     if (stdin) {
-      await streamWrite(process.stdin, stdin);
-      process.stdin.end();
+      streamWrite(process.stdin, stdin)
+        .then(() => process.stdin.end())
+        .catch(reject);
     }
 
     let stdout = "";

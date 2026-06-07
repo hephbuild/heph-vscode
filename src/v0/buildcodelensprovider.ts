@@ -26,7 +26,7 @@ export class BuildCodelensProvider implements vscode.CodeLensProvider {
   private queryCache = new LRUCache<string, heph.QueryTarget[]>({
     max: 20,
     fetchMethod: async (pkg: string) => {
-      let args = ["-a"]
+      const args = ["-a"]
       if (!Settings.copyAddrGen.get()) {
         args.push("--no-gen")
       }

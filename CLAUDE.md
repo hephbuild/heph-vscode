@@ -10,11 +10,11 @@ VS Code extension for the [heph](https://github.com/hephbuild/heph) build system
 
 - `npm run compile` — build (`tsc -p ./`), output to `out/`
 - `npm run watch` — incremental compile on change
-- `npm run lint` — eslint over `src` (`.ts`)
+- `npm run lint` — eslint (flat config, `eslint.config.mjs`) over `src`
 - `npm run test` — runs `out/test/runTest.js` (compiles + lints first via `pretest`); launches an Electron test host
 - `npx --yes @vscode/vsce package` — build a `.vsix`
 
-devenv wraps these as `build` / `watch` / `lint` / `package` scripts (see `devenv.nix`); Node 20 is pinned there. `npm install` runs automatically on entering the devenv shell.
+devenv wraps these as `build` / `watch` / `lint` / `package` scripts (see `devenv.nix`); Node 24 is pinned there (`.nvmrc` mirrors it). `npm install` runs automatically on entering the devenv shell.
 
 To run the extension live: open in VS Code, press F5 (Extension Development Host). In dev mode the logger auto-shows its output channel.
 
