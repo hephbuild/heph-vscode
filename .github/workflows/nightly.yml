@@ -1,0 +1,68 @@
+name: Nightly
+
+# Every push to rv1 publishes a preview build of the SEPARATE extension
+# `hephbuild.heph-nightly` to the VS Code Marketplace. Version is computed by
+# .github/workflows/version.sh (MAJOR.MINOR.<unix_seconds>). All build commands
+# run inside the devenv shell, matching the rust repo's CI.
+#
+# Pull requests run the same build (rebrand + version + package + artifact) but
+# skip the Marketplace publish — useful to download and sideload the .vsix.
+
+on:
+  push:
+    branches: [rv1]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-nightly:
+    name: Publish nightly
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for git rev-list --count
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: fallback = true
+      - name: Install devenv.sh
+        run: nix profile add nixpkgs#devenv
+
+      - name: Compute version
+        id: ver
+        shell: devenv shell bash -- -e {0}
+        run: |
+          VERSION=$(.github/workflows/version.sh nightly "${{ github.run_number }}")
+          SHA=$(git rev-parse --short HEAD)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "vsix=heph-nightly-$VERSION+$SHA.vsix" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Nightly version::$VERSION"
+
+      - name: Rebrand as nightly
+        shell: devenv shell bash -- -e {0}
+        run: |
+          npm pkg set name="heph-nightly"
+          npm pkg set displayName="heph (Nightly)"
+          npm pkg set version="${{ steps.ver.outputs.version }}"
+
+      - name: Package
+        shell: devenv shell bash -- -e {0}
+        run: npx --yes @vscode/vsce package -o "${{ steps.ver.outputs.vsix }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.ver.outputs.vsix }}
+          path: ${{ steps.ver.outputs.vsix }}
+
+      - name: Publish to Marketplace
+        if: github.event_name != 'pull_request'
+        shell: devenv shell bash -- -e {0}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx --yes @vscode/vsce publish --packagePath "${{ steps.ver.outputs.vsix }}"

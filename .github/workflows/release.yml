@@ -1,0 +1,58 @@
+name: Release
+
+# Pushing a v1.* tag publishes a mainline (stable) build of the official
+# extension `hephbuild.heph` to the VS Code Marketplace. Version comes from the
+# tag (v1.2.3 -> 1.2.3). All build commands run inside the devenv shell.
+
+on:
+  push:
+    tags: ["v1.*"]
+
+permissions:
+  contents: write # create the GitHub Release
+
+jobs:
+  publish-release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: fallback = true
+      - name: Install devenv.sh
+        run: nix profile add nixpkgs#devenv
+
+      - name: Compute version
+        id: ver
+        shell: devenv shell bash -- -e {0}
+        run: |
+          VERSION=$(.github/workflows/version.sh release "${{ github.ref_name }}")
+          npm pkg set version="$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "vsix=heph-$VERSION.vsix" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Release version::$VERSION"
+
+      - name: Package
+        shell: devenv shell bash -- -e {0}
+        run: npx --yes @vscode/vsce package -o "${{ steps.ver.outputs.vsix }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.ver.outputs.vsix }}
+          path: ${{ steps.ver.outputs.vsix }}
+
+      - name: Publish to Marketplace
+        shell: devenv shell bash -- -e {0}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx --yes @vscode/vsce publish --packagePath "${{ steps.ver.outputs.vsix }}"
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.ver.outputs.vsix }}
+          generate_release_notes: true
