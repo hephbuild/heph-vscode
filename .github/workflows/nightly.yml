@@ -1,6 +1,6 @@
 name: Nightly
 
-# Every push to rv1 publishes a preview build of the SEPARATE extension
+# Every push to v1 publishes a preview build of the SEPARATE extension
 # `hephbuild.heph-nightly` to the VS Code Marketplace. Version is computed by
 # .github/workflows/version.sh (MAJOR.MINOR.<unix_seconds>). All build commands
 # run inside the devenv shell, matching the rust repo's CI.
@@ -10,7 +10,7 @@ name: Nightly
 
 on:
   push:
-    branches: [rv1]
+    branches: [v1]
   pull_request:
   workflow_dispatch:
 
