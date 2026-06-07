@@ -29,6 +29,10 @@
         "command": "heph.editorRunConfigs",
         "title": "heph: run from current file",
         "icon": "$(run)"
+      },
+      {
+        "command": "heph.v1.hello",
+        "title": "heph: hello (v1)"
       }
     ],
     "languages": [
@@ -95,6 +99,15 @@
     "configuration": {
       "title": "heph",
       "properties": {
+        "heph.mode": {
+          "type": "string",
+          "enum": [
+            "v0",
+            "v1"
+          ],
+          "default": "v0",
+          "description": "heph plugin mode. v0 = current heph, v1 = next-gen heph (requires reload)"
+        },
         "heph.buildfiles.watcher.enabled": {
           "type": "boolean",
           "default": false,
@@ -135,8 +148,16 @@
     "menus": {
       "commandPalette": [
         {
+          "command": "heph.refreshState",
+          "when": "heph.mode == 'v0'"
+        },
+        {
           "command": "heph.editorRunConfigs",
-          "when": "heph.hasRunConfigs"
+          "when": "heph.hasRunConfigs && heph.mode == 'v0'"
+        },
+        {
+          "command": "heph.v1.hello",
+          "when": "heph.mode == 'v1'"
         }
       ],
       "editor/title": [
