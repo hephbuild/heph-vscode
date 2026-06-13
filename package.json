@@ -34,6 +34,10 @@
       {
         "command": "heph.v1.hello",
         "title": "heph: hello (v1)"
+      },
+      {
+        "command": "heph.v1.lsp.restart",
+        "title": "heph: restart language server"
       }
     ],
     "languages": [
@@ -106,7 +110,7 @@
             "v0",
             "v1"
           ],
-          "default": "v0",
+          "default": "v1",
           "description": "heph plugin mode. v0 = current heph, v1 = next-gen heph (requires reload)"
         },
         "heph.buildfiles.watcher.enabled": {
@@ -159,6 +163,10 @@
         {
           "command": "heph.v1.hello",
           "when": "heph.mode == 'v1'"
+        },
+        {
+          "command": "heph.v1.lsp.restart",
+          "when": "heph.mode == 'v1'"
         }
       ],
       "editor/title": [
@@ -204,6 +212,7 @@
     "vite": "^8.0.16"
   },
   "dependencies": {
-    "lru-cache": "^11.2.2"
+    "lru-cache": "^11.2.2",
+    "vscode-languageclient": "^9.0.1"
   }
 }

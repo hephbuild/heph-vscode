@@ -5,7 +5,7 @@ import { activate as activateV1 } from "./v1/extension";
 type Mode = "v0" | "v1";
 
 function getMode(): Mode {
-  return vscode.workspace.getConfiguration("heph").get<Mode>("mode") ?? "v0";
+  return vscode.workspace.getConfiguration("heph").get<Mode>("mode") ?? "v1";
 }
 
 export function activate(context: vscode.ExtensionContext) {

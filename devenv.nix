@@ -10,6 +10,9 @@
 
   # typescript / tsc come from package.json devDependencies via `npm install`.
 
+  # Azure CLI (`az`).
+  packages = [ pkgs.azure-cli ];
+
   # https://devenv.sh/scripts/
   scripts.build.exec = "npm run compile";
   scripts.watch.exec = "npm run watch";

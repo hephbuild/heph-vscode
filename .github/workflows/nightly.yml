@@ -22,12 +22,26 @@ jobs:
     name: Publish nightly
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: release-nightly
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # full history for git rev-list --count
-
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Fetch profile ID
+        run: |
+          az rest \
+            -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query id -o tsv
       - uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: fallback = true
@@ -67,6 +81,4 @@ jobs:
       - name: Publish to Marketplace
         if: github.event_name != 'pull_request'
         shell: devenv shell bash -- -e {0}
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx --yes @vscode/vsce publish --packagePath "${{ steps.ver.outputs.vsix }}"
+        run: npx --yes @vscode/vsce publish --azure-credential --packagePath "${{ steps.ver.outputs.vsix }}"
