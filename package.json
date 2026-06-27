@@ -21,6 +21,12 @@
   "publisher": "hephbuild",
   "main": "./dist/extension.js",
   "contributes": {
+    "configurationDefaults": {
+      "[hephbuild]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "hephbuild.heph"
+      }
+    },
     "commands": [
       {
         "command": "heph.refreshState",
