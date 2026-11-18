@@ -9,7 +9,7 @@ VS Code extension for the [heph](https://github.com/hephbuild/heph) build system
 The extension has two modes, selected by the `heph.mode` setting (`v1` default, change requires a window reload):
 
 - **v0** (`src/v0/`) — for current heph: formatting, code lenses, task running, debug launching, via `heph query`/`heph fmt`.
-- **v1** (`src/v1/`) — for next-gen heph: a language client for the LSP served by `heph tool build-lsp`.
+- **v1** (`src/v1/`) — for next-gen heph: a language client for the LSP served by `heph tool build-lsp`, and `.hephconfig` completion/validation from `heph tool config-schema`.
 
 Each mode has its own binary setting so both heph generations can coexist: `heph.bin` (v0) and `heph.bin1` (v1). Both default to `heph` on PATH.
 
@@ -21,7 +21,7 @@ Each mode has its own binary setting so both heph generations can coexist: `heph
 - `npm run compile` — `tsc` to `out/` (used by the tests)
 - `npm run bundle` — vite build to `dist/extension.js` (the `main` entry; `vscode-languageclient` and its deps stay external and ship in `node_modules`, see `vite.config.mjs`)
 - `npm run watch` — vite build in watch/development mode
-- `npm test` — compiles, bundles and lints (`pretest`), then runs `out/test/runTest.js`, which downloads VS Code into `.vscode-test/` and runs the mocha suite in an Electron host. Requires `@vscode/test-electron` ≥ 3.1 (VS Code ≥ 1.110 renamed the macOS executable from `Electron` to `Code`). The suite is currently only a placeholder test.
+- `npm test` — compiles, bundles and lints (`pretest`), then runs `out/test/runTest.js`, which downloads VS Code into `.vscode-test/`, installs `redhat.vscode-yaml` there, creates a temp workspace (`.hephconfig`, `ci.hephconfig`, `heph.bin1` → a fake `heph` shell script that only answers `tool config-schema`) and runs the mocha suite (`src/test/suite/*.test.ts`) in an Electron host opened on it. `HEPH_TEST_BIN=/path/to/heph1 node out/test/runTest.js` runs the suite against a real heph1 instead (after `npm run compile`). Requires `@vscode/test-electron` ≥ 3.1 (VS Code ≥ 1.110 renamed the macOS executable from `Electron` to `Code`). The fake heph fails `tool build-lsp`, so LSP startup errors in the test output are expected.
 - `npx --yes @vscode/vsce package` — build a `.vsix`
 
 devenv wraps these as `build` / `watch` / `lint` / `package` scripts (see `devenv.nix`); Node 24 is pinned there (`.nvmrc` mirrors it).
@@ -34,7 +34,11 @@ To run the extension live: open in VS Code, press F5 (Extension Development Host
 
 ### v1
 
+`src/v1/bin.ts` `bin()` resolves the v1 binary (`heph.bin1` or `heph` on PATH); every v1 spawn goes through it.
+
 `src/v1/lsp.ts` `HephLanguageClient` wraps a `vscode-languageclient` `LanguageClient` that spawns `<heph.bin1> tool build-lsp` over stdio for `hephbuild` documents. Automatic crash restarts are disabled on purpose; `heph.v1.lsp.restart` is the only retry. Failures are logged to the "heph Language Server" output channel.
+
+`src/v1/configschema.ts` `ConfigSchemaProvider` gives `.hephconfig`, `.hephconfig2` and profiles (`*.hephconfig`, all contributed as `yaml`) a JSON Schema through the Red Hat YAML extension's `registerContributor` API (scheme `heph-config-schema`); without that extension it offers to install it and does nothing else. The schema is the stdout of `<heph.bin1> tool config-schema`, run in the config file's directory (a pinned workspace re-executes into its pinned heph, so the schema matches the parser) with a timeout, and used only on exit 0 with a JSON `$schema` key; otherwise an empty schema, logged, no retry. Results are cached per directory; a saved config or a changed `heph.bin1` re-runs the command, and only a different output bumps the generation in the schema URI so yaml-language-server, which caches by URI, refetches. The contract for consumers of the command is `docs/CONFIG_SCHEMA.md` in the heph (rheph) repo.
 
 ### v0
 

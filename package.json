@@ -12,7 +12,8 @@
     "Formatters"
   ],
   "activationEvents": [
-    "workspaceContains:.hephconfig"
+    "workspaceContains:.hephconfig",
+    "workspaceContains:.hephconfig2"
   ],
   "repository": {
     "type": "git",
@@ -71,10 +72,13 @@
       {
         "id": "yaml",
         "filenames": [
-          ".hephconfig"
+          ".hephconfig",
+          ".hephconfig2"
         ],
         "filenamePatterns": [
-          ".hephconfig.*"
+          ".hephconfig.*",
+          "*.hephconfig",
+          "*.hephconfig2"
         ],
         "aliases": [
           "YAML",
@@ -157,7 +161,7 @@
         "heph.bin1": {
           "type": "string",
           "default": "",
-          "description": "heph binary path used in v1 mode, will default to the system-installed heph"
+          "description": "heph binary path used in v1 mode (language server, .hephconfig schema), will default to the system-installed heph"
         }
       }
     },
