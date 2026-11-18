@@ -152,7 +152,12 @@
         "heph.bin": {
           "type": "string",
           "default": "",
-          "description": "heph binary path, will default to the system-installed heph"
+          "description": "heph binary path used in v0 mode, will default to the system-installed heph"
+        },
+        "heph.bin1": {
+          "type": "string",
+          "default": "",
+          "description": "heph binary path used in v1 mode, will default to the system-installed heph"
         }
       }
     },
