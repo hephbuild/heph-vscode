@@ -7,14 +7,12 @@ import {
   LanguageClientOptions,
   ServerOptions,
 } from "vscode-languageclient/node";
+import { bin } from "./bin";
 
 // The heph CLI hosts the language server, speaking LSP over stdio:
 // `heph tool build-lsp`.
 const LSP_ARGS = ["tool", "build-lsp"];
 
-function bin(): string {
-  return vscode.workspace.getConfiguration("heph").get<string>("bin") || "heph";
-}
 
 export class HephLanguageClient {
   private client: LanguageClient | undefined;

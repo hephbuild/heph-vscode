@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && if [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then npm ci --no-audit --no-fund >&2; fi",
+            "timeout": 300,
+            "statusMessage": "Installing npm dependencies..."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm ci)",
+      "Bash(npm ci *)",
+      "Bash(npm run compile)",
+      "Bash(npm run check-types)",
+      "Bash(npm run bundle)",
+      "Bash(npm run lint)",
+      "Bash(npm test)",
+      "Bash(npm run test)"
+    ]
+  }
+}

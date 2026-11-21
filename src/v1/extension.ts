@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { HephLanguageClient } from "./lsp";
+import { ConfigSchemaProvider } from "./configschema";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("heph-vscode (v1) is now active!");
@@ -30,6 +31,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   void lsp.start().catch((err) => {
     void reportFailure("heph: failed to start language server", err);
+  });
+
+  const configSchema = new ConfigSchemaProvider(output);
+  context.subscriptions.push(configSchema);
+  void configSchema.register(context).catch((err) => {
+    output.appendLine(`heph: failed to register the .hephconfig schema: ${err}`);
   });
 
   context.subscriptions.push(

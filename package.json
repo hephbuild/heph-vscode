@@ -12,7 +12,8 @@
     "Formatters"
   ],
   "activationEvents": [
-    "workspaceContains:.hephconfig"
+    "workspaceContains:.hephconfig",
+    "workspaceContains:.hephconfig2"
   ],
   "repository": {
     "type": "git",
@@ -71,10 +72,13 @@
       {
         "id": "yaml",
         "filenames": [
-          ".hephconfig"
+          ".hephconfig",
+          ".hephconfig2"
         ],
         "filenamePatterns": [
-          ".hephconfig.*"
+          ".hephconfig.*",
+          "*.hephconfig",
+          "*.hephconfig2"
         ],
         "aliases": [
           "YAML",
@@ -152,7 +156,12 @@
         "heph.bin": {
           "type": "string",
           "default": "",
-          "description": "heph binary path, will default to the system-installed heph"
+          "description": "heph binary path used in v0 mode, will default to the system-installed heph"
+        },
+        "heph.bin1": {
+          "type": "string",
+          "default": "",
+          "description": "heph binary path used in v1 mode (language server, .hephconfig schema), will default to the system-installed heph"
         }
       }
     },
@@ -209,7 +218,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.13.1",
     "@types/vscode": "^1.96.0",
-    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-electron": "^3.1.0",
     "eslint": "^9.0.0",
     "glob": "^11.0.3",
     "mocha": "^11.7.6",
